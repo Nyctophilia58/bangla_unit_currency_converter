@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:unit_currency_converter/providers/language_provider.dart';
+import 'package:unit_currency_converter/providers/selection_provider.dart';
 import 'screens/converter.dart';
 import 'package:provider/provider.dart';
 import 'providers/theme_provider.dart';
@@ -12,12 +13,9 @@ void main() async{
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider<ThemeProvider>(
-          create: (context) => ThemeProvider(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => LanguageProvider(),
-        ),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => LanguageProvider()),
+        ChangeNotifierProvider(create: (_) => SelectionProvider()),
       ],
       child: const MyApp(),
     ),

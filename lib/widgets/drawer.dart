@@ -46,7 +46,7 @@ class MyDrawer extends StatelessWidget {
                       ListTile(
                         contentPadding: EdgeInsets.only(left: 30),
                         title: Text('English', style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                          color: language.isEnglish ? Colors.green : Colors.black,
+                          color: language.isEnglish ? Colors.green[700] : Theme.of(context).colorScheme.onBackground,
                           fontSize: 20,
                         ),),
                         onTap: () {
@@ -57,16 +57,15 @@ class MyDrawer extends StatelessWidget {
                       ),
                       ListTile(
                         contentPadding: EdgeInsets.only(left: 30),
+                        title: Text('Bangla', style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                          color: language.isEnglish ? Theme.of(context).colorScheme.onBackground : Colors.green[700],
+                          fontSize: 20,
+                        ),),
                         onTap: () {
                           if (language.isEnglish) {
                             language.setLanguage(false);
                           }
                         },
-                        title: Text('Bangla', style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                          color: language.isEnglish ? Colors.black : Colors.green,
-                          fontSize: 20,
-                        ),),
-
                       ),
                     ],
                   ),
