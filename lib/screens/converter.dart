@@ -18,17 +18,40 @@ class ConverterPage extends StatefulWidget {
 class _ConverterPageState extends State<ConverterPage> {
   BannerAd? _bannerAd;
 
-  final List<String> buttonLabels = ['Currency', 'Height', 'Weight', 'Temp.', 'Time'];
+  final List<String> buttonLabelsEnglish = [
+    'Currency',
+    'Height',
+    'Weight',
+    'Temp.',
+    'Time'
+  ];
+
+  final List<String> buttonLabelsBangla = [
+    'মুদ্রা',
+    'উচ্চতা',
+    'ওজন',
+    'তাপমাত্রা',
+    'সময়'
+  ];
+
+  final List<String> buttonIcons = [
+    'assets/icons/currency.png',
+    'assets/icons/height.png',
+    'assets/icons/weight.png',
+    'assets/icons/temperature.png',
+    'assets/icons/time.png'
+  ];
 
   final Map<int, List<String>> dropdownOptions = {
-    0: ['USD', 'EUR', 'BDT'],
-    1: ['Feet', 'Meters', 'Inches'],
-    2: ['Kg', 'Lb', 'Stone'],
-    3: ['Celsius', 'Fahrenheit'],
-    4: ['Seconds', 'Minutes', 'Hours'],
+    0: ['USD', 'EUR', 'BDT', 'INR', 'GBP', 'CAD'],
+    1: ['Feet', 'Meters', 'Inches', 'Centimeters'],
+    2: ['Kg', 'Lb', 'Oz', 'Stone'],
+    3: ['Celsius', 'Fahrenheit', 'Kelvin'],
+    4: ['Seconds', 'Minutes', 'Hours', 'Days'],
   };
 
   final myTextController = TextEditingController();
+  String _output = '';
 
   @override
   void initState(){
@@ -76,11 +99,12 @@ class _ConverterPageState extends State<ConverterPage> {
           Column(
             children: [
               Row(
-                children: List.generate(buttonLabels.length, (index){
+                children: List.generate(buttonLabelsEnglish.length, (index){
                   final isSelected = dropdownProvider.selectedIndex == index;
 
                   return SquareButton(
-                    label: buttonLabels[index],
+                    imagePath: buttonIcons[index],
+                    label: languageProvider.isEnglish ? buttonLabelsEnglish[index] : buttonLabelsBangla[index],
                     isSelected: isSelected,
                     onTap: (){
                       dropdownProvider.selectIndex(index);
@@ -93,9 +117,16 @@ class _ConverterPageState extends State<ConverterPage> {
 
               Row(
                 children: [
+                  const SizedBox(width: 20,),
                   Expanded(
                     flex: 2,
                     child: TextField(
+                      controller: myTextController,
+                      onChanged: (text) {
+                        setState(() {
+                          _output = text;
+                        });
+                      },
                       decoration: InputDecoration(
                         hintText: "Enter value",
                         border: OutlineInputBorder(),
@@ -104,29 +135,22 @@ class _ConverterPageState extends State<ConverterPage> {
                     ),
                   ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(width: 30),
 
                   Expanded(
                     flex: 2,
                     child: DropdownButtonFormField<String>(
-                      value: dropdownProvider.selectedValue,
+                      value: dropdownProvider.firstSelectedValue,
                       isExpanded: true,
-                      items: [
-                        DropdownMenuItem(
-                          value: null,
-                          child: Text(
-                            dropdownOptions[dropdownProvider.selectedIndex]![0],
-                          ),
-                        ),
-                        ...dropdownOptions[dropdownProvider.selectedIndex]!
+                      hint: Text("Select an option"),
+                      items: dropdownOptions[dropdownProvider.selectedIndex]!
                           .map((e) => DropdownMenuItem(
                               value: e,
                               child: Text(e),
-                          )),
-                      ],
+                          )).toList(),
                       onChanged: (value) {
                         if (value != null) {
-                          dropdownProvider.selectValue(value);
+                          dropdownProvider.selectFirstValue(value);
                         }
                       },
                       decoration: InputDecoration(
@@ -135,20 +159,82 @@ class _ConverterPageState extends State<ConverterPage> {
                       ),
                     ),
                   ),
+
+                  const SizedBox(width: 20),
+                ],
+              ),
+
+              const SizedBox(height: 20,),
+
+              Row(
+                children: [
+                  Icon(
+                    Icons.arrow_forward,
+                    size: 20,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+
+                  Expanded(
+                    flex: 2,
+                    child: Container(
+                      padding: EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Text(
+                        _output,
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 30),
+
+                  Expanded(
+                    flex: 2,
+                    child: DropdownButtonFormField<String>(
+                      value: dropdownProvider.secondSelectedValue,
+                      isExpanded: true,
+                      hint: Text("Select an option"),
+                      items: dropdownOptions[dropdownProvider.selectedIndex]!
+                          .map((e) => DropdownMenuItem(
+                        value: e,
+                        child: Text(e),
+                      )).toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          dropdownProvider.selectSecondValue(value);
+                        }
+                      },
+                      decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 12)
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 20),
                 ],
               ),
             ],
           ),
 
-          if(_bannerAd != null)
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Container(
-                width: _bannerAd!.size.width.toDouble(),
-                height: _bannerAd!.size.height.toDouble(),
-                child: AdWidget(ad: _bannerAd!),
-              ),
-            )
+          Column(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              // add a calculator here
+
+              if(_bannerAd != null)
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Container(
+                    width: _bannerAd!.size.width.toDouble(),
+                    height: _bannerAd!.size.height.toDouble(),
+                    child: AdWidget(ad: _bannerAd!),
+                  ),
+                )
+            ]
+          )
         ],
       )
     );
