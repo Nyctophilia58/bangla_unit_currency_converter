@@ -82,7 +82,7 @@ class _ConverterPageState extends State<ConverterPage> {
     ).load();
   }
 
-  void performConversion() {
+  Future<void> performConversion() async {
     final dropdownProvider = Provider.of<SelectionProvider>(context, listen: false);
     final from = dropdownProvider.firstSelectedValue;
     final to = dropdownProvider.secondSelectedValue;
@@ -96,30 +96,30 @@ class _ConverterPageState extends State<ConverterPage> {
       return;
     }
 
-    double result;
+    double? result;
 
     switch (category) {
-      case 1: // Height
+      case 0: // Currency
+        result = await convertCurrency(input, from, to);
+        break;
+      case 1:
         result = convertHeight(input, from, to);
         break;
-      case 2: // Weight
+      case 2:
         result = convertWeight(input, from, to);
         break;
-      case 3: // Temperature
+      case 3:
         result = convertTemperature(input, from, to);
         break;
-      case 4: // Time
+      case 4:
         result = convertTime(input, from, to);
         break;
-      case 0: // Currency (you'll need API for real-time data)
-        result = convertCurrency(input, from, to) as double; // Placeholder
-        break;
       default:
-        result = input;
+        result = null;
     }
 
     setState(() {
-      outputValue = result.toStringAsFixed(2);
+      outputValue = result != null ? result.toStringAsFixed(2) : 'Invalid';
     });
   }
 
