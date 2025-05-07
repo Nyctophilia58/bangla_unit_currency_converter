@@ -5,6 +5,12 @@ import 'package:unit_currency_converter/ad_helper.dart';
 import 'package:unit_currency_converter/providers/language_provider.dart';
 import 'package:unit_currency_converter/widgets/drawer.dart';
 
+import '../conversions/convert_currency.dart';
+import '../conversions/convert_height.dart';
+import '../conversions/convert_temperature.dart';
+import '../conversions/convert_time.dart';
+import '../conversions/convert_weight.dart';
+import '../models/button_values.dart';
 import '../models/square_button.dart';
 import '../providers/selection_provider.dart';
 
@@ -17,6 +23,9 @@ class ConverterPage extends StatefulWidget {
 
 class _ConverterPageState extends State<ConverterPage> {
   BannerAd? _bannerAd;
+
+  String inputValue = '';
+  String outputValue = '';
 
   final List<String> buttonLabelsEnglish = [
     'Currency',
@@ -50,12 +59,11 @@ class _ConverterPageState extends State<ConverterPage> {
     4: ['Seconds', 'Minutes', 'Hours', 'Days'],
   };
 
-  final myTextController = TextEditingController();
-  String _output = '';
-
   @override
   void initState(){
     super.initState();
+    inputValue = '';
+    outputValue = '';
     BannerAd(
       adUnitId: AdHelper.bannerAdUnitId,
       request: AdRequest(),
@@ -74,9 +82,50 @@ class _ConverterPageState extends State<ConverterPage> {
     ).load();
   }
 
+  void performConversion() {
+    final dropdownProvider = Provider.of<SelectionProvider>(context, listen: false);
+    final from = dropdownProvider.firstSelectedValue;
+    final to = dropdownProvider.secondSelectedValue;
+    final category = dropdownProvider.selectedIndex;
+
+    double? input = double.tryParse(inputValue);
+    if (input == null || from == null || to == null) {
+      setState(() {
+        outputValue = 'Invalid';
+      });
+      return;
+    }
+
+    double result;
+
+    switch (category) {
+      case 1: // Height
+        result = convertHeight(input, from, to);
+        break;
+      case 2: // Weight
+        result = convertWeight(input, from, to);
+        break;
+      case 3: // Temperature
+        result = convertTemperature(input, from, to);
+        break;
+      case 4: // Time
+        result = convertTime(input, from, to);
+        break;
+      case 0: // Currency (you'll need API for real-time data)
+        result = convertCurrency(input, from, to) as double; // Placeholder
+        break;
+      default:
+        result = input;
+    }
+
+    setState(() {
+      outputValue = result.toStringAsFixed(2);
+    });
+  }
+
+
   @override
   void dispose() {
-    myTextController.dispose();
     super.dispose();
   }
 
@@ -84,6 +133,8 @@ class _ConverterPageState extends State<ConverterPage> {
   Widget build(BuildContext context) {
     final languageProvider = Provider.of<LanguageProvider>(context);
     final dropdownProvider = Provider.of<SelectionProvider>(context);
+
+    final screenSize = MediaQuery.of(context).size;
 
     return Scaffold(
       appBar: AppBar(
@@ -108,6 +159,8 @@ class _ConverterPageState extends State<ConverterPage> {
                     isSelected: isSelected,
                     onTap: (){
                       dropdownProvider.selectIndex(index);
+                      inputValue = '';
+                      outputValue = '';
                     }
                   );
                 })
@@ -120,17 +173,14 @@ class _ConverterPageState extends State<ConverterPage> {
                   const SizedBox(width: 20,),
                   Expanded(
                     flex: 2,
-                    child: TextField(
-                      controller: myTextController,
-                      onChanged: (text) {
-                        setState(() {
-                          _output = text;
-                        });
-                      },
-                      decoration: InputDecoration(
-                        hintText: "Enter value",
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12)
+                    child: Container(
+                      padding: EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                      ),
+                      child: Text(
+                        inputValue,
+                        style: TextStyle(fontSize: 18),
                       ),
                     ),
                   ),
@@ -144,6 +194,7 @@ class _ConverterPageState extends State<ConverterPage> {
                       isExpanded: true,
                       hint: Text("Select an option"),
                       items: dropdownOptions[dropdownProvider.selectedIndex]!
+                        .toSet()
                           .map((e) => DropdownMenuItem(
                               value: e,
                               child: Text(e),
@@ -168,23 +219,20 @@ class _ConverterPageState extends State<ConverterPage> {
 
               Row(
                 children: [
-                  Icon(
-                    Icons.arrow_forward,
-                    size: 20,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+                  const SizedBox(width: 20),
 
                   Expanded(
                     flex: 2,
                     child: Container(
                       padding: EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade300),
+                        border: Border.all(color: Colors.grey),
                       ),
                       child: Text(
-                        _output,
+                        outputValue,
                         style: TextStyle(fontSize: 18),
                       ),
+
                     ),
                   ),
 
@@ -197,6 +245,7 @@ class _ConverterPageState extends State<ConverterPage> {
                       isExpanded: true,
                       hint: Text("Select an option"),
                       items: dropdownOptions[dropdownProvider.selectedIndex]!
+                          .toSet()
                           .map((e) => DropdownMenuItem(
                         value: e,
                         child: Text(e),
@@ -216,13 +265,26 @@ class _ConverterPageState extends State<ConverterPage> {
                   const SizedBox(width: 20),
                 ],
               ),
+
+              const SizedBox(height: 20,),
             ],
           ),
 
           Column(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              // add a calculator here
+              Wrap(
+                children: Button.buttonValues
+                  .map(
+                    (value) => SizedBox(
+                      width: value == Button.ok ? (screenSize.width / 2) : screenSize.width / 4,
+                      height: screenSize.height / 10,
+                      child: buildButton(value),
+                    ),
+                  ).toList(),
+              ),
+
+              const SizedBox(height: 5,),
 
               if(_bannerAd != null)
                 Align(
@@ -238,5 +300,72 @@ class _ConverterPageState extends State<ConverterPage> {
         ],
       )
     );
+  }
+
+  Widget buildButton(String value) {
+    return Padding(
+      padding: const EdgeInsets.all(4.0),
+      child: Material(
+        color: getButtonColor(value),
+        clipBehavior: Clip.hardEdge,
+        shape: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(50),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.inversePrimary,
+            width: 1,
+          ),
+        ),
+        child: InkWell(
+          onTap: () {
+            if (value == Button.del) {
+              setState(() {
+                inputValue = inputValue.isNotEmpty ? inputValue.substring(0, inputValue.length - 1) : '';
+              });
+            } else if (value == Button.clear) {
+              setState(() {
+                inputValue = '';
+              });
+            } else if (value == Button.ok) {
+              // Handle OK button action
+              performConversion();
+            } else if (value == Button.dot) {
+              setState(() {
+                inputValue += '.';
+              });
+            } else if (value == Button.zeroZero) {
+              setState(() {
+                inputValue += '00';
+              });
+            } else {
+              setState(() {
+                inputValue += value;
+              });
+            }
+          },
+          child: Center(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: [Button.del, Button.clear].contains(value)?
+                  Colors.white :
+                [Button.ok,].contains(value)?
+                  Colors.white :
+                [Button.dot].contains(value)? Colors.white : Colors.black,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Color getButtonColor(value) {
+    return [Button.del, Button.clear].contains(value)?
+    Colors.red :
+    [Button.ok,].contains(value)?
+    Colors.green : [Button.dot,].contains(value) ? Colors.blue :
+    Colors.grey;
   }
 }
