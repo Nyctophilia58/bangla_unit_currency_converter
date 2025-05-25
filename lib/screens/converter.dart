@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
-import 'package:unit_currency_converter/ad_helper.dart';
+import 'package:unit_currency_converter/services/ad_helper.dart';
 import 'package:unit_currency_converter/providers/language_provider.dart';
+import 'package:unit_currency_converter/services/ad_loader.dart';
 import 'package:unit_currency_converter/widgets/drawer.dart';
 
+import '../constant/converter_constants.dart';
 import '../conversions/convert_currency.dart';
 import '../conversions/convert_height.dart';
 import '../conversions/convert_temperature.dart';
@@ -26,38 +28,6 @@ class _ConverterPageState extends State<ConverterPage> {
 
   String inputValue = '';
   String outputValue = '';
-
-  final List<String> buttonLabelsEnglish = [
-    'Currency',
-    'Height',
-    'Weight',
-    'Temp.',
-    'Time'
-  ];
-
-  final List<String> buttonLabelsBangla = [
-    'মুদ্রা',
-    'উচ্চতা',
-    'ওজন',
-    'তাপমাত্রা',
-    'সময়'
-  ];
-
-  final List<String> buttonIcons = [
-    'assets/icons/currency.png',
-    'assets/icons/height.png',
-    'assets/icons/weight.png',
-    'assets/icons/temperature.png',
-    'assets/icons/time.png'
-  ];
-
-  final Map<int, List<String>> dropdownOptions = {
-    0: ['USD', 'EUR', 'BDT', 'INR', 'GBP', 'CAD'],
-    1: ['Feet', 'Meters', 'Inches', 'Centimeters'],
-    2: ['Kg', 'Lb', 'Oz', 'Stone'],
-    3: ['Celsius', 'Fahrenheit', 'Kelvin'],
-    4: ['Seconds', 'Minutes', 'Hours', 'Days'],
-  };
 
   @override
   void initState(){
@@ -136,7 +106,10 @@ class _ConverterPageState extends State<ConverterPage> {
 
     final screenSize = MediaQuery.of(context).size;
 
+    final buttonLabels = languageProvider.isEnglish ? buttonLabelsEnglish : buttonLabelsBangla;
+
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.background,
       appBar: AppBar(
         title: Text(
           languageProvider.isEnglish ? 'Bangla Unit Currency Converter' : 'বাংলা একক মুদ্রা রূপান্তরকারী'),
@@ -155,7 +128,7 @@ class _ConverterPageState extends State<ConverterPage> {
 
                   return SquareButton(
                     imagePath: buttonIcons[index],
-                    label: languageProvider.isEnglish ? buttonLabelsEnglish[index] : buttonLabelsBangla[index],
+                    label: buttonLabels[index],
                     isSelected: isSelected,
                     onTap: (){
                       dropdownProvider.selectIndex(index);
@@ -170,13 +143,13 @@ class _ConverterPageState extends State<ConverterPage> {
 
               Row(
                 children: [
-                  const SizedBox(width: 20,),
+                  const SizedBox(width: 20),
                   Expanded(
                     flex: 2,
                     child: Container(
                       padding: EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
+                        border: Border.all(color: Theme.of(context).colorScheme.outline),
                       ),
                       child: Text(
                         inputValue,
@@ -226,7 +199,7 @@ class _ConverterPageState extends State<ConverterPage> {
                     child: Container(
                       padding: EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
+                        border: Border.all(color: Theme.of(context).colorScheme.outline),
                       ),
                       child: Text(
                         outputValue,
@@ -289,11 +262,7 @@ class _ConverterPageState extends State<ConverterPage> {
               if(_bannerAd != null)
                 Align(
                   alignment: Alignment.bottomCenter,
-                  child: Container(
-                    width: _bannerAd!.size.width.toDouble(),
-                    height: _bannerAd!.size.height.toDouble(),
-                    child: AdWidget(ad: _bannerAd!),
-                  ),
+                  child: AdLoader(bannerAd: _bannerAd!),
                 )
             ]
           )
@@ -302,14 +271,27 @@ class _ConverterPageState extends State<ConverterPage> {
     );
   }
 
+  void _onButtonTap(String value) {
+    setState(() {
+      if (value == Button.del) {
+        inputValue = inputValue.isNotEmpty ? inputValue.substring(0, inputValue.length - 1) : '';
+      } else if (value == Button.clear) {
+        inputValue = '';
+      } else if (value == Button.ok) {
+        performConversion();
+      } else {
+        inputValue += value;
+      }
+    });
+  }
+
   Widget buildButton(String value) {
     return Padding(
-      padding: const EdgeInsets.all(4.0),
+      padding: const EdgeInsets.all(0.0),
       child: Material(
         color: getButtonColor(value),
         clipBehavior: Clip.hardEdge,
         shape: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(50),
           borderSide: BorderSide(
             color: Theme.of(context).colorScheme.inversePrimary,
             width: 1,
