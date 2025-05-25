@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/theme_provider.dart';
 
+
 class MyDrawer extends StatelessWidget {
   const MyDrawer({super.key});
 
@@ -15,7 +16,7 @@ class MyDrawer extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Material(
-      color: Theme.of(context).scaffoldBackgroundColor,
+      color: Theme.of(context).colorScheme.background,
       child: SizedBox(
         width: screenWidth,
         height: screenHeight,
@@ -103,7 +104,6 @@ class MyDrawer extends StatelessWidget {
                         ),
                       ),
                       onTap: () {
-
                       },
                     ),
 
@@ -175,9 +175,7 @@ class MyDrawer extends StatelessWidget {
                           fontSize: 24,
                         ),
                       ),
-                      onTap: () {
-                        // onSelected('filters');
-                      },
+                      onTap: () {}
                     )
                   ]
                 )
