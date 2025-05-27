@@ -49,7 +49,7 @@
 
         <intent>
             <action android:name="android.intent.action.VIEW"/>
-            <data android:mimeType="https"/>
+            <data android:scheme="https"/>
         </intent>
     </queries>
 </manifest>

@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:url_launcher_android/url_launcher_android.dart';
 import '../providers/language_provider.dart';
 import '../providers/theme_provider.dart';
+import '../screens/about_us.dart';
 
 
 class MyDrawer extends StatelessWidget {
@@ -162,7 +163,12 @@ class MyDrawer extends StatelessWidget {
                       ),
                       onTap: () {
                         // about us page
-
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AboutUsPage(),
+                          ),
+                        );
                       },
                     ),
                     ListTile(
