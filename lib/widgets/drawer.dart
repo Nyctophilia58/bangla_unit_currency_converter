@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher_android/url_launcher_android.dart';
 import '../providers/language_provider.dart';
 import '../providers/theme_provider.dart';
 
@@ -159,7 +161,8 @@ class MyDrawer extends StatelessWidget {
                         ),
                       ),
                       onTap: () {
-                        // onSelected('filters');
+                        // about us page
+
                       },
                     ),
                     ListTile(
@@ -175,7 +178,17 @@ class MyDrawer extends StatelessWidget {
                           fontSize: 24,
                         ),
                       ),
-                      onTap: () {}
+                      onTap: () async {
+                        // url to github
+                        final url = Uri.parse('https://github.com/Nyctophilia58/bangla_unit_currency_converter');
+                        if(await canLaunchUrl(url)) {
+                          launchUrl(url, mode: LaunchMode.externalApplication);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(language.isEnglish ? 'Could not launch URL' : 'URL চালু করা যায়নি')),
+                          );
+                        }
+                      }
                     )
                   ]
                 )
