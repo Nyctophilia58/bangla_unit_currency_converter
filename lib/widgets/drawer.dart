@@ -2,14 +2,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:url_launcher_android/url_launcher_android.dart';
 import '../providers/language_provider.dart';
 import '../providers/theme_provider.dart';
 import '../screens/about_us.dart';
-
+import '../services/iap_service.dart';
 
 class MyDrawer extends StatelessWidget {
-  const MyDrawer({super.key});
+  final IAPService iapService;
+  const MyDrawer({super.key, required this.iapService});
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +34,6 @@ class MyDrawer extends StatelessWidget {
                   color: Theme.of(context).colorScheme.onBackground,
                 ),
               ),
-
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Column(
@@ -49,7 +48,7 @@ class MyDrawer extends StatelessWidget {
                           size: 26,
                           color: Theme.of(context).colorScheme.onBackground,
                         ),
-                        trailing: SizedBox.shrink(),
+                        trailing: const SizedBox.shrink(),
                         title: Text(
                           language.isEnglish ? 'Language' : 'ভাষা',
                           style: Theme.of(context).textTheme.titleSmall!.copyWith(
@@ -59,11 +58,13 @@ class MyDrawer extends StatelessWidget {
                         ),
                         children: [
                           ListTile(
-                            contentPadding: EdgeInsets.only(left: 30),
+                            contentPadding: const EdgeInsets.only(left: 30),
                             title: Text(
                               language.isEnglish ? 'English' : 'ইংরেজি',
                               style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                                color: language.isEnglish ? Colors.green[700] : Theme.of(context).colorScheme.onBackground,
+                                color: language.isEnglish
+                                    ? Colors.green[700]
+                                    : Theme.of(context).colorScheme.onBackground,
                                 fontSize: 20,
                               ),
                             ),
@@ -74,11 +75,13 @@ class MyDrawer extends StatelessWidget {
                             },
                           ),
                           ListTile(
-                            contentPadding: EdgeInsets.only(left: 30),
+                            contentPadding: const EdgeInsets.only(left: 30),
                             title: Text(
                               language.isEnglish ? 'Bangla' : 'বাংলা',
                               style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                                color: language.isEnglish ? Theme.of(context).colorScheme.onBackground : Colors.green[700],
+                                color: language.isEnglish
+                                    ? Theme.of(context).colorScheme.onBackground
+                                    : Colors.green[700],
                                 fontSize: 20,
                               ),
                             ),
@@ -91,28 +94,58 @@ class MyDrawer extends StatelessWidget {
                         ],
                       ),
                     ),
-
-                    ListTile(
-                      // Unlock Pro
-                      leading: Icon(
-                        Icons.lock,
-                        size: 26,
-                        color: Theme.of(context).colorScheme.onBackground,
-                      ),
-                      title: Text(
-                        language.isEnglish ? 'Unlock Pro' : 'প্রো আনলক করুন',
-                        style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                          color: Theme.of(context).colorScheme.onBackground,
-                          fontSize: 24,
-                        ),
-                      ),
-                      onTap: () {
+                    ValueListenableBuilder<bool>(
+                      valueListenable: iapService.isProNotifier,
+                      builder: (context, isPro, child) {
+                        return isPro
+                            ? const SizedBox.shrink()
+                            : ListTile(
+                          leading: Icon(
+                            Icons.lock,
+                            size: 26,
+                            color: Theme.of(context).colorScheme.onBackground,
+                          ),
+                          title: Text(
+                            language.isEnglish ? 'Unlock Pro' : 'প্রো আনলক করুন',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleSmall!
+                                .copyWith(
+                              color:
+                              Theme.of(context).colorScheme.onBackground,
+                              fontSize: 24,
+                            ),
+                          ),
+                          onTap: () async {
+                            try {
+                              await iapService.purchasePro();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(language.isEnglish
+                                      ? 'Processing purchase...'
+                                      : 'ক্রয় প্রক্রিয়াকরণ...'),
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(language.isEnglish
+                                      ? 'Purchase failed: $e'
+                                      : 'ক্রয় ব্যর্থ হয়েছে: $e'),
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                            }
+                          },
+                        );
                       },
                     ),
-
                     ListTile(
                       leading: Icon(
-                        Provider.of<ThemeProvider>(context).isDarkMode ? Icons.dark_mode : Icons.light_mode,
+                        Provider.of<ThemeProvider>(context).isDarkMode
+                            ? Icons.dark_mode
+                            : Icons.light_mode,
                         size: 26,
                         color: Theme.of(context).colorScheme.onBackground,
                       ),
@@ -145,7 +178,7 @@ class MyDrawer extends StatelessWidget {
                         ),
                       ),
                       onTap: () {
-                        // onSelected('filters');
+                        // Implement Rate Us functionality if needed
                       },
                     ),
                     ListTile(
@@ -162,7 +195,6 @@ class MyDrawer extends StatelessWidget {
                         ),
                       ),
                       onTap: () {
-                        // about us page
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -185,19 +217,23 @@ class MyDrawer extends StatelessWidget {
                         ),
                       ),
                       onTap: () async {
-                        // url to github
-                        final url = Uri.parse('https://github.com/Nyctophilia58/bangla_unit_currency_converter');
-                        if(await canLaunchUrl(url)) {
-                          launchUrl(url, mode: LaunchMode.externalApplication);
+                        final url = Uri.parse(
+                            'https://github.com/Nyctophilia58/bangla_unit_currency_converter');
+                        if (await canLaunchUrl(url)) {
+                          await launchUrl(url, mode: LaunchMode.externalApplication);
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(language.isEnglish ? 'Could not launch URL' : 'URL চালু করা যায়নি')),
+                            SnackBar(
+                              content: Text(language.isEnglish
+                                  ? 'Could not launch URL'
+                                  : 'URL চালু করা যায়নি'),
+                            ),
                           );
                         }
-                      }
-                    )
-                  ]
-                )
+                      },
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
