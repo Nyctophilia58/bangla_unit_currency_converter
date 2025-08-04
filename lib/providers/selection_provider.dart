@@ -77,4 +77,16 @@ class SelectionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void reset() {
+    _selectedIndex = 0;
+    _firstSelectedValues.clear();
+    _secondSelectedValues.clear();
+    notifyListeners();
+
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.remove('selectedIndex');
+      prefs.remove('firstSelectedValues');
+      prefs.remove('secondSelectedValues');
+    });
+  }
 }

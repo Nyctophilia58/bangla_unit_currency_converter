@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:in_app_review/in_app_review.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/language_provider.dart';
 import '../providers/theme_provider.dart';
 import '../screens/about_us.dart';
@@ -10,6 +12,16 @@ import '../services/iap_service.dart';
 class MyDrawer extends StatelessWidget {
   final IAPService iapService;
   const MyDrawer({super.key, required this.iapService});
+
+  Future<bool> _hasRatedApp() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('hasRated') ?? false;
+  }
+
+  Future<void> _setRatedApp() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('hasRated', true);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -164,21 +176,61 @@ class MyDrawer extends StatelessWidget {
                         inactiveTrackColor: Colors.black38,
                       ),
                     ),
-                    ListTile(
-                      leading: Icon(
-                        Icons.star_rate,
-                        size: 26,
-                        color: Theme.of(context).colorScheme.onBackground,
-                      ),
-                      title: Text(
-                        language.isEnglish ? 'Rate Us' : 'রেট করুন',
-                        style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                          color: Theme.of(context).colorScheme.onBackground,
-                          fontSize: 24,
-                        ),
-                      ),
-                      onTap: () {
-                        // Implement Rate Us functionality if needed
+                    FutureBuilder<bool>(
+                      future: _hasRatedApp(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const SizedBox.shrink();
+                        }
+                        final hasRated = snapshot.data ?? false;
+                        return hasRated
+                            ? const SizedBox.shrink()
+                            : ListTile(
+                          leading: Icon(
+                            Icons.star_rate,
+                            size: 26,
+                            color: Theme.of(context).colorScheme.onBackground,
+                          ),
+                          title: Text(
+                            language.isEnglish ? 'Rate Us' : 'রেট করুন',
+                            style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                              color: Theme.of(context).colorScheme.onBackground,
+                              fontSize: 24,
+                            ),
+                          ),
+                          onTap: () async {
+                            final InAppReview inAppReview = InAppReview.instance;
+                            try {
+                              if (await inAppReview.isAvailable()) {
+                                await inAppReview.requestReview();
+                                await _setRatedApp();
+                              } else {
+                                final url = Uri.parse(
+                                    'https://play.google.com/store/apps/details?id=com.nowshin.unit_currency_converter');
+                                if (await canLaunchUrl(url)) {
+                                  await launchUrl(url, mode: LaunchMode.externalApplication);
+                                  await _setRatedApp();
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(language.isEnglish
+                                          ? 'Could not open Play Store'
+                                          : 'প্লে স্টোর খুলতে পারেনি'),
+                                    ),
+                                  );
+                                }
+                              }
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(language.isEnglish
+                                      ? 'Error launching review: $e'
+                                      : 'রিভিউ চালু করতে ত্রুটি: $e'),
+                                ),
+                              );
+                            }
+                          },
+                        );
                       },
                     ),
                     ListTile(
