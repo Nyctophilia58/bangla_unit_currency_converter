@@ -28,10 +28,12 @@ class _ConverterPageState extends State<ConverterPage> {
   late IAPService _iapService;
   String inputValue = '';
   String outputValue = '';
+  final TextEditingController _inputController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+    _inputController.text = "";
     inputValue = '';
     outputValue = '';
     _iapService = IAPService();
@@ -53,7 +55,7 @@ class _ConverterPageState extends State<ConverterPage> {
             });
           },
           onAdFailedToLoad: (ad, err) {
-            print('Failed to load a banner ad: ${err.message}');
+            debugPrint('Failed to load a banner ad: ${err.message}');
             ad.dispose();
           },
         ),
@@ -115,6 +117,7 @@ class _ConverterPageState extends State<ConverterPage> {
 
   @override
   void dispose() {
+    _inputController.dispose();
     _bannerAd?.dispose();
     _iapService.isProNotifier.removeListener(_updateAdVisibility);
     _iapService.dispose();
@@ -137,160 +140,267 @@ class _ConverterPageState extends State<ConverterPage> {
           languageProvider.isEnglish
               ? 'Bangla Unit Currency Converter'
               : 'বাংলা একক মুদ্রা রূপান্তরকারী',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
-        backgroundColor: Theme.of(context).colorScheme.primaryFixedDim,
-      ),
-      drawer: MyDrawer(iapService: _iapService),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            children: [
-              Row(
-                children: List.generate(buttonLabelsEnglish.length, (index) {
-                  final isSelected = dropdownProvider.selectedIndex == index;
-
-                  return SquareButton(
-                    imagePath: buttonIcons[index],
-                    label: buttonLabels[index],
-                    isSelected: isSelected,
-                    onTap: () {
-                      dropdownProvider.selectIndex(index);
-                      inputValue = '';
-                      outputValue = '';
-                    },
-                  );
-                }),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  const SizedBox(width: 20),
-                  Expanded(
-                    flex: 2,
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                            color: Theme.of(context).colorScheme.outline),
-                      ),
-                      child: Text(
-                        inputValue,
-                        style: const TextStyle(fontSize: 18),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 30),
-                  Expanded(
-                    flex: 2,
-                    child: DropdownButtonFormField<String>(
-                      value: dropdownProvider.firstSelectedValue,
-                      isExpanded: true,
-                      hint: const Text("Select an option"),
-                      items: dropdownOptions[dropdownProvider.selectedIndex]!
-                          .toSet()
-                          .map((e) => DropdownMenuItem(
-                        value: e,
-                        child: Text(e),
-                      ))
-                          .toList(),
-                      onChanged: (value) {
-                        if (value != null) {
-                          dropdownProvider.selectFirstValue(value);
-                        }
-                      },
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 20),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  const SizedBox(width: 20),
-                  Expanded(
-                    flex: 2,
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                            color: Theme.of(context).colorScheme.outline),
-                      ),
-                      child: Text(
-                        outputValue,
-                        style: const TextStyle(fontSize: 18),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 30),
-                  Expanded(
-                    flex: 2,
-                    child: DropdownButtonFormField<String>(
-                      value: dropdownProvider.secondSelectedValue,
-                      isExpanded: true,
-                      hint: const Text("Select an option"),
-                      items: dropdownOptions[dropdownProvider.selectedIndex]!
-                          .toSet()
-                          .map((e) => DropdownMenuItem(
-                        value: e,
-                        child: Text(e),
-                      ))
-                          .toList(),
-                      onChanged: (value) {
-                        if (value != null) {
-                          dropdownProvider.selectSecondValue(value);
-                        }
-                      },
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 20),
-                ],
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              Wrap(
-                children: Button.buttonValues
-                    .map(
-                      (value) => SizedBox(
-                    width: value == Button.ok
-                        ? (screenSize.width / 2)
-                        : screenSize.width / 4,
-                    height: screenSize.height / 10,
-                    child: buildButton(value),
-                  ),
-                )
-                    .toList(),
-              ),
-              const SizedBox(height: 5),
-              ValueListenableBuilder<bool>(
-                valueListenable: _iapService.isProNotifier,
-                builder: (context, isPro, child) {
-                  return isPro
-                      ? const SizedBox.shrink()
-                      : _bannerAd != null
-                      ? Align(
-                    alignment: Alignment.bottomCenter,
-                    child: AdLoader(bannerAd: _bannerAd!),
-                  )
-                      : const SizedBox.shrink();
-                },
-              ),
-            ],
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        elevation: 2,
+        shadowColor: Theme.of(context).colorScheme.shadow.withOpacity(0.2),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              setState(() {
+                inputValue = '';
+                outputValue = '';
+                _inputController.clear();
+                dropdownProvider.resetCurrentCategory();
+              });
+            },
+            tooltip: languageProvider.isEnglish ? 'Reset' : 'রিসেট',
           ),
         ],
+      ),
+      drawer: MyDrawer(iapService: _iapService),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final padding = constraints.maxWidth * 0.05;
+          return SingleChildScrollView(
+            child: Column(
+              children: [
+                SizedBox(height: padding),
+                SizedBox(
+                  height: 100,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: EdgeInsets.symmetric(horizontal: padding),
+                    itemCount: buttonLabelsEnglish.length,
+                    itemBuilder: (context, index) {
+                      final isSelected = dropdownProvider.selectedIndex == index;
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 3.0),
+                        child: GestureDetector(
+                          onTap: () {
+                            dropdownProvider.selectIndex(index);
+                            setState(() {
+                              inputValue = '';
+                              outputValue = '';
+                              _inputController.clear();
+                            });
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            curve: Curves.easeInOut,
+                            width: 65,
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? Theme.of(context).colorScheme.secondaryContainer
+                                  : Theme.of(context).colorScheme.surfaceContainer,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Theme.of(context).colorScheme.shadow.withOpacity(0.1),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Image.asset(
+                                  buttonIcons[index],
+                                  height: 40,
+                                  color: isSelected
+                                      ? Theme.of(context).colorScheme.onPrimary
+                                      : Theme.of(context).colorScheme.onSurface,
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  buttonLabels[index],
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                    color: isSelected
+                                        ? Theme.of(context).colorScheme.onPrimary
+                                        : Theme.of(context).colorScheme.onSurface,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                SizedBox(height: padding),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: padding),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: TextField(
+                          controller: _inputController,
+                          decoration: InputDecoration(
+                            labelText: languageProvider.isEnglish ? 'Input' : 'ইনপুট',
+                            filled: true,
+                            fillColor: Theme.of(context).colorScheme.surfaceContainerLow,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+                          ),
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          style: Theme.of(context).textTheme.bodyLarge,
+                          onChanged: (value) {
+                            setState(() {
+                              inputValue = value;
+                            });
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        flex: 2,
+                        child: DropdownButtonFormField<String>(
+                          value: dropdownProvider.firstSelectedValue,
+                          hint: Text(
+                            languageProvider.isEnglish ? 'Select Option' : 'বিকল্প নির্বাচন করুন',
+                            style: Theme.of(context).textTheme.bodyLarge,
+                          ),
+                          isExpanded: true,
+                          items: dropdownOptions[dropdownProvider.selectedIndex]!
+                              .toSet()
+                              .map((e) => DropdownMenuItem<String>(
+                            value: e,
+                            child: Text(e, style: Theme.of(context).textTheme.bodyLarge),
+                          ))
+                              .toList(),
+                          onChanged: (value) {
+                            if (value != null) {
+                              dropdownProvider.selectFirstValue(value);
+                            }
+                          },
+                          style: Theme.of(context).textTheme.bodyLarge,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Theme.of(context).colorScheme.surfaceContainerLow,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: padding),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: padding),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: TextField(
+                          readOnly: true,
+                          decoration: InputDecoration(
+                            labelText: languageProvider.isEnglish ? 'Output' : 'আউটপুট',
+                            filled: true,
+                            fillColor: Theme.of(context).colorScheme.surfaceContainerLow,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+                          ),
+                          controller: TextEditingController(text: outputValue),
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        flex: 2,
+                        child: DropdownButtonFormField<String>(
+                          value: dropdownProvider.secondSelectedValue,
+                          hint: Text(
+                            languageProvider.isEnglish ? 'Select Option' : 'বিকল্প নির্বাচন করুন',
+                            style: Theme.of(context).textTheme.bodyLarge,
+                          ),
+                          isExpanded: true,
+                          items: dropdownOptions[dropdownProvider.selectedIndex]!
+                              .toSet()
+                              .map((e) => DropdownMenuItem<String>(
+                            value: e,
+                            child: Text(e, style: Theme.of(context).textTheme.bodyLarge),
+                          ))
+                              .toList(),
+                          onChanged: (value) {
+                            if (value != null) {
+                              dropdownProvider.selectSecondValue(value);
+                            }
+                          },
+                          style: Theme.of(context).textTheme.bodyLarge,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Theme.of(context).colorScheme.surfaceContainerLow,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: padding * 4),
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: EdgeInsets.symmetric(horizontal: padding, vertical: 8),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 4,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                    childAspectRatio: (constraints.maxWidth / 4 - 8) / (constraints.maxHeight / 10),
+                  ),
+                  itemCount: Button.buttonValues.length,
+                  itemBuilder: (context, index) {
+                    final value = Button.buttonValues[index];
+                    return AnimatedScaleButton(value: value, onTap: _onButtonTap);
+                  },
+                ),
+                ValueListenableBuilder<bool>(
+                  valueListenable: _iapService.isProNotifier,
+                  builder: (context, isPro, child) {
+                    return AnimatedOpacity(
+                      opacity: isPro || _bannerAd == null ? 0.0 : 1.0,
+                      duration: const Duration(milliseconds: 300),
+                      child: Card(
+                        elevation: 2,
+                        margin: EdgeInsets.all(padding),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        child: isPro
+                            ? const SizedBox.shrink()
+                            : _bannerAd != null
+                            ? AdLoader(bannerAd: _bannerAd!)
+                            : const SizedBox.shrink(),
+                      ),
+                    );
+                  },
+                ),
+                SizedBox(height: padding),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -298,51 +408,41 @@ class _ConverterPageState extends State<ConverterPage> {
   void _onButtonTap(String value) {
     setState(() {
       if (value == Button.del) {
-        inputValue =
-        inputValue.isNotEmpty ? inputValue.substring(0, inputValue.length - 1) : '';
+        inputValue = inputValue.isNotEmpty ? inputValue.substring(0, inputValue.length - 1) : '';
+        _inputController.text = inputValue;
       } else if (value == Button.clear) {
         inputValue = '';
+        _inputController.text = '';
       } else if (value == Button.ok) {
         performConversion();
       } else {
         inputValue += value;
+        _inputController.text = inputValue;
       }
     });
   }
+}
 
-  Widget buildButton(String value) {
-    return Padding(
-      padding: const EdgeInsets.all(0.0),
-      child: Material(
-        color: getButtonColor(value),
-        clipBehavior: Clip.hardEdge,
-        shape: OutlineInputBorder(
-          borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.inversePrimary,
-            width: 1,
-          ),
-        ),
-        child: InkWell(
-          onTap: () => _onButtonTap(value),
-          child: Center(
-            child: Text(
-              value,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: [Button.del, Button.clear].contains(value)
-                    ? Colors.white
-                    : [Button.ok].contains(value)
-                    ? Colors.white
-                    : [Button.dot].contains(value)
-                    ? Colors.white
-                    : Colors.black,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
+class AnimatedScaleButton extends StatefulWidget {
+  final String value;
+  final void Function(String) onTap;
+
+  const AnimatedScaleButton({super.key, required this.value, required this.onTap});
+
+  @override
+  State<AnimatedScaleButton> createState() => _AnimatedScaleButtonState();
+}
+
+class _AnimatedScaleButtonState extends State<AnimatedScaleButton> {
+  double _scale = 1.0;
+
+  void _onTapDown(TapDownDetails _) {
+    setState(() => _scale = 0.95);
+  }
+
+  void _onTapUp(TapUpDetails _) {
+    setState(() => _scale = 1.0);
+    widget.onTap(widget.value);
   }
 
   Color getButtonColor(String value) {
@@ -352,6 +452,35 @@ class _ConverterPageState extends State<ConverterPage> {
         ? Colors.green
         : [Button.dot].contains(value)
         ? Colors.blue
-        : Colors.grey;
+        : Theme.of(context).colorScheme.secondaryContainer;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: _onTapDown,
+      onTapUp: _onTapUp,
+      onTapCancel: () => setState(() => _scale = 1.0),
+      child: Transform.scale(
+        scale: _scale,
+        child: Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          color: getButtonColor(widget.value),
+          child: Center(
+            child: Text(
+              widget.value,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: [Button.del, Button.clear, Button.ok, Button.dot].contains(widget.value)
+                    ? Colors.white
+                    : Theme.of(context).colorScheme.onSecondaryContainer,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
