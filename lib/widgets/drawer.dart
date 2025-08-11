@@ -7,94 +7,52 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/language_provider.dart';
 import '../providers/theme_provider.dart';
 import '../screens/about_us.dart';
-import '../services/iap_service.dart';
 
 class MyDrawer extends StatefulWidget {
-  final IAPService iapService;
-  const MyDrawer({super.key, required this.iapService});
+  const MyDrawer({super.key});
 
   @override
   State<MyDrawer> createState() => _MyDrawerState();
 }
 
 class _MyDrawerState extends State<MyDrawer> {
-  bool _hasRated = false;
   final InAppReview _inAppReview = InAppReview.instance;
+  bool _hasRated = false;
 
   @override
   void initState() {
     super.initState();
-    _loadRatedStatus();
+    _loadRateStatus();
   }
 
-  Future<void> _loadRatedStatus() async {
+  Future<void> _loadRateStatus() async {
     final prefs = await SharedPreferences.getInstance();
-    if (mounted) {
-      setState(() {
-        _hasRated = prefs.getBool('hasRated') ?? false;
-      });
-    }
+    setState(() {
+      _hasRated = prefs.getBool('hasRated') ?? false;
+    });
   }
 
-  Future<void> _setRated() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('hasRated', true);
-    if (mounted) {
-      setState(() {
-        _hasRated = true;
-      });
-    }
-  }
-
-  Future<void> _onRateUsTap() async {
+  Future<void> _handleRateUs() async {
     try {
       if (await _inAppReview.isAvailable()) {
-        // Show the in-app review popup
         await _inAppReview.requestReview();
 
-        // Give the popup some time to show before opening Play Store
-        await Future.delayed(const Duration(seconds: 3));
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('hasRated', true);
 
-        // Open Play Store page for final submission
+        setState(() {
+          _hasRated = true;
+        });
+      } else {
         final url = Uri.parse(
           'https://play.google.com/store/apps/details?id=com.nowshin.unit_currency_converter',
         );
         if (await canLaunchUrl(url)) {
           await launchUrl(url, mode: LaunchMode.externalApplication);
-
-          // Mark as rated ONLY if Play Store was opened
-          await _setRated();
-        }
-      } else {
-        // Fallback: Open Play Store directly
-        final url = Uri.parse(
-          'https://play.google.com/store/apps/details?id=com.nowshin.unit_currency_converter',
-        );
-        if (await canLaunchUrl(url)) {
-          await launchUrl(
-            url,
-            mode: LaunchMode.platformDefault, // Let OEM skin decide
-            webViewConfiguration: const WebViewConfiguration(
-              enableJavaScript: true,
-              enableDomStorage: true,
-            ),
-          );
-          await _setRated();
-        }
-        else {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Could not open Play Store')),
-            );
-          }
         }
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error launching review: $e')),
-        );
-      }
+      debugPrint("Error showing in-app review: $e");
     }
   }
 
@@ -102,7 +60,6 @@ class _MyDrawerState extends State<MyDrawer> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final language = Provider.of<LanguageProvider>(context);
-
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
 
@@ -182,55 +139,6 @@ class _MyDrawerState extends State<MyDrawer> {
                       ),
                     ),
 
-                    // Unlock Pro
-                    ValueListenableBuilder<bool>(
-                      valueListenable: widget.iapService.isProNotifier,
-                      builder: (context, isPro, child) {
-                        return isPro
-                            ? const SizedBox.shrink()
-                            : ListTile(
-                          leading: Icon(
-                            Icons.lock,
-                            size: 26,
-                            color: theme.colorScheme.onBackground,
-                          ),
-                          title: Text(
-                            language.isEnglish
-                                ? 'Unlock Pro'
-                                : 'প্রো আনলক করুন',
-                            style: theme.textTheme.titleSmall!.copyWith(
-                              color: theme.colorScheme.onBackground,
-                              fontSize: 24,
-                            ),
-                          ),
-                          onTap: () async {
-                            try {
-                              await widget.iapService.purchasePro();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(language.isEnglish
-                                      ? 'Processing purchase...'
-                                      : 'ক্রয় প্রক্রিয়াকরণ...'),
-                                  duration:
-                                  const Duration(seconds: 2),
-                                ),
-                              );
-                            } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(language.isEnglish
-                                      ? 'Purchase failed: $e'
-                                      : 'ক্রয় ব্যর্থ হয়েছে: $e'),
-                                  duration:
-                                  const Duration(seconds: 2),
-                                ),
-                              );
-                            }
-                          },
-                        );
-                      },
-                    ),
-
                     // Theme toggle
                     ListTile(
                       leading: Icon(
@@ -259,7 +167,7 @@ class _MyDrawerState extends State<MyDrawer> {
                       ),
                     ),
 
-                    // Rate Us (only show if not rated)
+                    // Rate Us
                     if (!_hasRated)
                       ListTile(
                         leading: Icon(
@@ -274,7 +182,7 @@ class _MyDrawerState extends State<MyDrawer> {
                             fontSize: 24,
                           ),
                         ),
-                        onTap: _onRateUsTap,
+                        onTap: _handleRateUs,
                       ),
 
                     // About Us
