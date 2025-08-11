@@ -163,7 +163,8 @@ class _ConverterPageState extends State<ConverterPage> {
           ),
         ],
       ),
-      drawer: MyDrawer(iapService: _iapService),
+      // drawer: MyDrawer(iapService: _iapService),
+      drawer: MyDrawer(),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final padding = constraints.maxWidth * 0.05;
