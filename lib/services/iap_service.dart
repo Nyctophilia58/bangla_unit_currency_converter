@@ -38,6 +38,8 @@ class IAPService {
         debugPrint('Purchase stream error: $error');
       },
     );
+
+    await _iap.restorePurchases();
   }
 
   Future<void> purchasePro() async {

@@ -1,4 +1,3 @@
-
 # GDPR-Compliant Privacy Policy for Bangla Unit-Currency Converter
 
 **Effective Date:** 07-05-2025

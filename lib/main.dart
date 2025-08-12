@@ -16,7 +16,7 @@ void main() async {
   }
 
   final iapService = IAPService();
-  await iapService.initialize();
+  iapService.initialize();
 
   runApp(
     MultiProvider(
