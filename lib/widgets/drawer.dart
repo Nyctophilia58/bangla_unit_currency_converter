@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:unit_currency_converter/services/iap_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,7 +10,8 @@ import '../providers/theme_provider.dart';
 import '../screens/about_us.dart';
 
 class MyDrawer extends StatefulWidget {
-  const MyDrawer({super.key});
+  final IAPService iapService;
+  const MyDrawer({super.key, required this.iapService});
 
   @override
   State<MyDrawer> createState() => _MyDrawerState();
@@ -27,32 +29,65 @@ class _MyDrawerState extends State<MyDrawer> {
 
   Future<void> _loadRateStatus() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _hasRated = prefs.getBool('hasRated') ?? false;
-    });
+    if (mounted){
+      setState(() {
+        _hasRated = prefs.getBool('hasRated') ?? false;
+      });
+    }
   }
 
-  Future<void> _handleRateUs() async {
+  Future<void> _setRated() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('hasRated', true);
+    if (mounted){
+      setState(() {
+        _hasRated = true;
+      });
+    }
+  }
+
+  Future<void> _onRateUsTap() async {
     try {
       if (await _inAppReview.isAvailable()) {
         await _inAppReview.requestReview();
 
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('hasRated', true);
-
-        setState(() {
-          _hasRated = true;
-        });
-      } else {
         final url = Uri.parse(
           'https://play.google.com/store/apps/details?id=com.nowshin.unit_currency_converter',
         );
         if (await canLaunchUrl(url)) {
           await launchUrl(url, mode: LaunchMode.externalApplication);
+
+          await _setRated();
+        }
+      } else {
+        final url = Uri.parse(
+          'https://play.google.com/store/apps/details?id=com.nowshin.unit_currency_converter',
+        );
+        if (await canLaunchUrl(url)) {
+          await launchUrl(
+            url,
+            mode: LaunchMode.platformDefault,
+            webViewConfiguration: const WebViewConfiguration(
+              enableJavaScript: true,
+              enableDomStorage: true,
+            ),
+          );
+          await _setRated();
+        }
+        else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Could not open Play Store')),
+            );
+          }
         }
       }
     } catch (e) {
-      debugPrint("Error showing in-app review: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error launching review: $e')),
+        );
+      }
     }
   }
 
@@ -83,7 +118,6 @@ class _MyDrawerState extends State<MyDrawer> {
                 padding: const EdgeInsets.all(8.0),
                 child: Column(
                   children: [
-                    // Language settings
                     Theme(
                       data: theme.copyWith(dividerColor: Colors.transparent),
                       child: ExpansionTile(
@@ -139,7 +173,25 @@ class _MyDrawerState extends State<MyDrawer> {
                       ),
                     ),
 
-                    // Theme toggle
+                    // Unlock Premium
+                    ListTile(
+                      leading: Icon(
+                        Icons.lock_open_rounded,
+                        size: 26,
+                        color: theme.colorScheme.onBackground,
+                      ),
+                      title: Text(
+                        language.isEnglish ? 'Unlock Premium' : 'প্রিমিয়াম আনলক করুন',
+                        style: theme.textTheme.titleSmall!.copyWith(
+                          color: theme.colorScheme.onBackground,
+                          fontSize: 24,
+                        ),
+                      ),
+                      onTap: () async {
+                        await widget.iapService.purchasePro();
+                      },
+                    ),
+
                     ListTile(
                       leading: Icon(
                         Provider.of<ThemeProvider>(context).isDarkMode
@@ -167,7 +219,6 @@ class _MyDrawerState extends State<MyDrawer> {
                       ),
                     ),
 
-                    // Rate Us
                     if (!_hasRated)
                       ListTile(
                         leading: Icon(
@@ -182,10 +233,9 @@ class _MyDrawerState extends State<MyDrawer> {
                             fontSize: 24,
                           ),
                         ),
-                        onTap: _handleRateUs,
+                        onTap: _onRateUsTap,
                       ),
 
-                    // About Us
                     ListTile(
                       leading: Icon(
                         Icons.info_outline_rounded,
@@ -211,7 +261,6 @@ class _MyDrawerState extends State<MyDrawer> {
                       },
                     ),
 
-                    // GitHub
                     ListTile(
                       leading: Icon(
                         Icons.code_rounded,
