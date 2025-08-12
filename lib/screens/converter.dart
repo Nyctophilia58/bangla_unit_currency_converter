@@ -13,7 +13,6 @@ import '../conversions/convert_temperature.dart';
 import '../conversions/convert_time.dart';
 import '../conversions/convert_weight.dart';
 import '../models/button_values.dart';
-import '../models/square_button.dart';
 import '../providers/selection_provider.dart';
 
 class ConverterPage extends StatefulWidget {
@@ -25,7 +24,7 @@ class ConverterPage extends StatefulWidget {
 
 class _ConverterPageState extends State<ConverterPage> {
   BannerAd? _bannerAd;
-  late IAPService _iapService;
+  final IAPService _iapService = IAPService();
   String inputValue = '';
   String outputValue = '';
   final TextEditingController _inputController = TextEditingController();
@@ -36,7 +35,6 @@ class _ConverterPageState extends State<ConverterPage> {
     _inputController.text = "";
     inputValue = '';
     outputValue = '';
-    _iapService = IAPService();
     _iapService.initialize();
     _iapService.isProNotifier.addListener(_updateAdVisibility);
     _loadAd();
@@ -163,8 +161,7 @@ class _ConverterPageState extends State<ConverterPage> {
           ),
         ],
       ),
-      // drawer: MyDrawer(iapService: _iapService),
-      drawer: MyDrawer(),
+      drawer: MyDrawer(iapService: _iapService,),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final padding = constraints.maxWidth * 0.05;

@@ -4,7 +4,7 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class IAPService {
-  static const String _productId = 'unlock_pro';
+  static const String _productId = 'remove_ads';
   final InAppPurchase _iap = InAppPurchase.instance;
   final ValueNotifier<bool> isProNotifier = ValueNotifier<bool>(false);
   StreamSubscription<List<PurchaseDetails>>? _subscription;
@@ -17,18 +17,17 @@ class IAPService {
 
     final bool isAvailable = await _iap.isAvailable();
     if (!isAvailable) {
-      print('In-App Purchase is not available');
+      debugPrint('In-App Purchase is not available');
       return;
     }
 
     final productDetailsResponse = await _iap.queryProductDetails({_productId});
     if (productDetailsResponse.productDetails.isEmpty) {
-      print('No products found');
+      debugPrint('No products found');
       return;
     }
 
-    final Stream<List<PurchaseDetails>> purchaseUpdated = _iap.purchaseStream;
-    _subscription = purchaseUpdated.listen(
+    _subscription = _iap.purchaseStream.listen(
           (purchaseDetailsList) {
         _handlePurchaseUpdates(purchaseDetailsList);
       },
@@ -36,7 +35,7 @@ class IAPService {
         _subscription?.cancel();
       },
       onError: (error) {
-        print('Purchase stream error: $error');
+        debugPrint('Purchase stream error: $error');
       },
     );
   }
@@ -44,7 +43,7 @@ class IAPService {
   Future<void> purchasePro() async {
     final productDetailsResponse = await _iap.queryProductDetails({_productId});
     if (productDetailsResponse.productDetails.isEmpty) {
-      print('Product not found');
+      debugPrint('Product not found');
       return;
     }
 

@@ -37,7 +37,6 @@ class SelectionProvider extends ChangeNotifier {
         }
       }
 
-      // Ensure keys exist for categories (adjust `5` if you have different count)
       for (int i = 0; i < 5; i++) {
         _firstSelectedValues.putIfAbsent(i, () => null);
         _secondSelectedValues.putIfAbsent(i, () => null);

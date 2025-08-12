@@ -7,7 +7,7 @@ class AdLoader extends StatelessWidget{
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: bannerAd.size.width.toDouble(),
       height: bannerAd.size.height.toDouble(),
       child: AdWidget(ad: bannerAd),
