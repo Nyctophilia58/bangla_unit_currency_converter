@@ -126,7 +126,9 @@ class _MyDrawerState extends State<MyDrawer> {
                           size: 26,
                           color: theme.colorScheme.onBackground,
                         ),
-                        trailing: const SizedBox.shrink(),
+                        trailing: const Icon(
+                          Icons.arrow_drop_down,
+                        ),
                         title: Text(
                           language.isEnglish ? 'Language' : 'ভাষা',
                           style: theme.textTheme.titleSmall!.copyWith(
@@ -174,29 +176,29 @@ class _MyDrawerState extends State<MyDrawer> {
                     ),
 
                     ValueListenableBuilder<bool>(
-                      valueListenable: widget.iapService.isProNotifier,
-                      builder: (context, isPro, _) {
-                        if (isPro) {
-                          return SizedBox.shrink();
-                        }
-                        return ListTile(
-                          leading: Icon(
-                            Icons.lock_open_rounded,
-                            size: 26,
-                            color: theme.colorScheme.onBackground,
-                          ),
-                          title: Text(
-                            language.isEnglish ? 'Unlock Premium' : 'প্রিমিয়াম আনলক করুন',
-                            style: theme.textTheme.titleSmall!.copyWith(
+                        valueListenable: widget.iapService.isProNotifier,
+                        builder: (context, isPro, _) {
+                          if (isPro) {
+                            return SizedBox.shrink();
+                          }
+                          return ListTile(
+                            leading: Icon(
+                              Icons.lock_open_rounded,
+                              size: 26,
                               color: theme.colorScheme.onBackground,
-                              fontSize: 24,
                             ),
-                          ),
-                          onTap: () async {
-                            await widget.iapService.purchasePro();
-                          },
-                        );
-                      }
+                            title: Text(
+                              language.isEnglish ? 'Unlock Premium' : 'প্রিমিয়াম আনলক করুন',
+                              style: theme.textTheme.titleSmall!.copyWith(
+                                color: theme.colorScheme.onBackground,
+                                fontSize: 24,
+                              ),
+                            ),
+                            onTap: () async {
+                              await widget.iapService.purchasePro();
+                            },
+                          );
+                        }
                     ),
 
                     ListTile(
@@ -308,3 +310,4 @@ class _MyDrawerState extends State<MyDrawer> {
     );
   }
 }
+

@@ -127,7 +127,6 @@ class _ConverterPageState extends State<ConverterPage> {
     final languageProvider = Provider.of<LanguageProvider>(context);
     final dropdownProvider = Provider.of<SelectionProvider>(context);
 
-    final screenSize = MediaQuery.of(context).size;
     final buttonLabels =
     languageProvider.isEnglish ? buttonLabelsEnglish : buttonLabelsBangla;
 
@@ -378,22 +377,22 @@ class _ConverterPageState extends State<ConverterPage> {
                 ValueListenableBuilder<bool>(
                   valueListenable: _iapService.isProNotifier,
                   builder: (context, isPro, child) {
-                    return AnimatedOpacity(
-                      opacity: isPro || _bannerAd == null ? 0.0 : 1.0,
+                    if (isPro || _bannerAd == null) {
+                      return const SizedBox.shrink();
+                    }
+                    return AnimatedSwitcher(
                       duration: const Duration(milliseconds: 300),
                       child: Card(
+                        key: ValueKey<bool>(isPro),
                         elevation: 2,
                         margin: EdgeInsets.all(padding),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        child: isPro
-                            ? const SizedBox.shrink()
-                            : _bannerAd != null
-                            ? AdLoader(bannerAd: _bannerAd!)
-                            : const SizedBox.shrink(),
+                        child: AdLoader(bannerAd: _bannerAd!),
                       ),
                     );
                   },
                 ),
+
                 SizedBox(height: padding),
               ],
             ),
