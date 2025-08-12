@@ -173,23 +173,30 @@ class _MyDrawerState extends State<MyDrawer> {
                       ),
                     ),
 
-                    // Unlock Premium
-                    ListTile(
-                      leading: Icon(
-                        Icons.lock_open_rounded,
-                        size: 26,
-                        color: theme.colorScheme.onBackground,
-                      ),
-                      title: Text(
-                        language.isEnglish ? 'Unlock Premium' : 'প্রিমিয়াম আনলক করুন',
-                        style: theme.textTheme.titleSmall!.copyWith(
-                          color: theme.colorScheme.onBackground,
-                          fontSize: 24,
-                        ),
-                      ),
-                      onTap: () async {
-                        await widget.iapService.purchasePro();
-                      },
+                    ValueListenableBuilder<bool>(
+                      valueListenable: widget.iapService.isProNotifier,
+                      builder: (context, isPro, _) {
+                        if (isPro) {
+                          return SizedBox.shrink();
+                        }
+                        return ListTile(
+                          leading: Icon(
+                            Icons.lock_open_rounded,
+                            size: 26,
+                            color: theme.colorScheme.onBackground,
+                          ),
+                          title: Text(
+                            language.isEnglish ? 'Unlock Premium' : 'প্রিমিয়াম আনলক করুন',
+                            style: theme.textTheme.titleSmall!.copyWith(
+                              color: theme.colorScheme.onBackground,
+                              fontSize: 24,
+                            ),
+                          ),
+                          onTap: () async {
+                            await widget.iapService.purchasePro();
+                          },
+                        );
+                      }
                     ),
 
                     ListTile(
