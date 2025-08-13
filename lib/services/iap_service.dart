@@ -14,7 +14,7 @@ class IAPService {
   Future<void> initialize() async {
     final prefs = await SharedPreferences.getInstance();
     isProNotifier.value = prefs.getBool('isPro') ?? false;
-
+    // isProNotifier.value = true;
     final bool isAvailable = await _iap.isAvailable();
     if (!isAvailable) {
       debugPrint('In-App Purchase is not available');

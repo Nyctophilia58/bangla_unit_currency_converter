@@ -28,6 +28,7 @@ class _ConverterPageState extends State<ConverterPage> {
   String inputValue = '';
   String outputValue = '';
   final TextEditingController _inputController = TextEditingController();
+  final ScrollController _inputScrollController = ScrollController();
 
   @override
   void initState() {
@@ -119,6 +120,7 @@ class _ConverterPageState extends State<ConverterPage> {
     _bannerAd?.dispose();
     _iapService.isProNotifier.removeListener(_updateAdVisibility);
     _iapService.dispose();
+    _inputScrollController.dispose();
     super.dispose();
   }
 
@@ -129,6 +131,11 @@ class _ConverterPageState extends State<ConverterPage> {
 
     final buttonLabels =
     languageProvider.isEnglish ? buttonLabelsEnglish : buttonLabelsBangla;
+
+    final options = optionKeys[dropdownProvider.selectedIndex]!;
+    final labels = languageProvider.isEnglish
+        ? optionLabelsEnglish[dropdownProvider.selectedIndex]!
+        : optionLabelsBangla[dropdownProvider.selectedIndex]!;
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
@@ -241,6 +248,8 @@ class _ConverterPageState extends State<ConverterPage> {
                         flex: 3,
                         child: TextField(
                           controller: _inputController,
+                          scrollController: _inputScrollController,
+                          readOnly: true,
                           decoration: InputDecoration(
                             labelText: languageProvider.isEnglish ? 'Input' : 'ইনপুট',
                             filled: true,
@@ -266,17 +275,15 @@ class _ConverterPageState extends State<ConverterPage> {
                         child: DropdownButtonFormField<String>(
                           value: dropdownProvider.firstSelectedValue,
                           hint: Text(
-                            languageProvider.isEnglish ? 'Select Option' : 'বিকল্প নির্বাচন করুন',
+                            languageProvider.isEnglish ? 'Select Option' : 'নির্বাচন করুন',
                             style: Theme.of(context).textTheme.bodyLarge,
                           ),
                           isExpanded: true,
-                          items: dropdownOptions[dropdownProvider.selectedIndex]!
-                              .toSet()
-                              .map((e) => DropdownMenuItem<String>(
-                            value: e,
-                            child: Text(e, style: Theme.of(context).textTheme.bodyLarge),
-                          ))
-                              .toList(),
+                            items: options.map((key){
+                              return DropdownMenuItem<String>(
+                                value: key,
+                                child: Text(labels[key]!, style: Theme.of(context).textTheme.bodyLarge),                              );
+                            }).toList(),
                           onChanged: (value) {
                             if (value != null) {
                               dropdownProvider.selectFirstValue(value);
@@ -290,7 +297,7 @@ class _ConverterPageState extends State<ConverterPage> {
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none,
                             ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
                           ),
                         ),
                       ),
@@ -326,17 +333,15 @@ class _ConverterPageState extends State<ConverterPage> {
                         child: DropdownButtonFormField<String>(
                           value: dropdownProvider.secondSelectedValue,
                           hint: Text(
-                            languageProvider.isEnglish ? 'Select Option' : 'বিকল্প নির্বাচন করুন',
+                            languageProvider.isEnglish ? 'Select Option' : 'নির্বাচন করুন',
                             style: Theme.of(context).textTheme.bodyLarge,
                           ),
                           isExpanded: true,
-                          items: dropdownOptions[dropdownProvider.selectedIndex]!
-                              .toSet()
-                              .map((e) => DropdownMenuItem<String>(
-                            value: e,
-                            child: Text(e, style: Theme.of(context).textTheme.bodyLarge),
-                          ))
-                              .toList(),
+                          items: options.map((key){
+                            return DropdownMenuItem<String>(
+                              value: key,
+                              child: Text(labels[key]!, style: Theme.of(context).textTheme.bodyLarge),                              );
+                          }).toList(),
                           onChanged: (value) {
                             if (value != null) {
                               dropdownProvider.selectSecondValue(value);
@@ -350,14 +355,20 @@ class _ConverterPageState extends State<ConverterPage> {
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none,
                             ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
-                SizedBox(height: padding * 4),
+
+                // if user is pro user space between input and buttons
+                if (!_iapService.isPro)
+                  SizedBox(height: padding * 4)
+                else
+                  SizedBox(height: padding * 7),
+
                 GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -374,26 +385,25 @@ class _ConverterPageState extends State<ConverterPage> {
                     return AnimatedScaleButton(value: value, onTap: _onButtonTap);
                   },
                 ),
-                ValueListenableBuilder<bool>(
-                  valueListenable: _iapService.isProNotifier,
-                  builder: (context, isPro, child) {
-                    if (isPro || _bannerAd == null) {
-                      return const SizedBox.shrink();
-                    }
-                    return AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      child: Card(
-                        key: ValueKey<bool>(isPro),
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: _iapService.isProNotifier,
+                    builder: (context, isPro, child) {
+                      if (isPro || _bannerAd == null) {
+                        return const SizedBox.shrink();
+                      }
+                      return Card(
                         elevation: 2,
                         margin: EdgeInsets.all(padding),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         child: AdLoader(bannerAd: _bannerAd!),
-                      ),
-                    );
-                  },
-                ),
+                      );
+                    },
+                  ),
+                )
 
-                SizedBox(height: padding),
               ],
             ),
           );
@@ -406,16 +416,19 @@ class _ConverterPageState extends State<ConverterPage> {
     setState(() {
       if (value == Button.del) {
         inputValue = inputValue.isNotEmpty ? inputValue.substring(0, inputValue.length - 1) : '';
-        _inputController.text = inputValue;
       } else if (value == Button.clear) {
         inputValue = '';
-        _inputController.text = '';
       } else if (value == Button.ok) {
         performConversion();
       } else {
         inputValue += value;
-        _inputController.text = inputValue;
       }
+      _inputController.text = inputValue;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _inputScrollController.jumpTo(
+          _inputScrollController.position.maxScrollExtent,
+        );
+      });
     });
   }
 }
