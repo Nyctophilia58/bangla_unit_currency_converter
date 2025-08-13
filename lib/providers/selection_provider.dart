@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../constant/converter_constants.dart';
 
 class SelectionProvider extends ChangeNotifier {
   int _selectedIndex = 0;
-  final Map<int, String?> _firstSelectedValues = {};
-  final Map<int, String?> _secondSelectedValues = {};
+  final Map<int, String?> _firstSelectedKeys = {};
+  final Map<int, String?> _secondSelectedKeys = {};
 
   int get selectedIndex => _selectedIndex;
-  String? get firstSelectedValue => _firstSelectedValues[_selectedIndex];
-  String? get secondSelectedValue => _secondSelectedValues[_selectedIndex];
+  String? get firstSelectedValue => _firstSelectedKeys[_selectedIndex];
+  String? get secondSelectedValue => _secondSelectedKeys[_selectedIndex];
 
   SelectionProvider() {
     _loadSelection();
@@ -19,27 +20,27 @@ class SelectionProvider extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       _selectedIndex = prefs.getInt('selectedIndex') ?? 0;
 
-      final firstStoredValue = prefs.getStringList('firstSelectedValues') ?? [];
-      for (final entry in firstStoredValue) {
+      final firstStoredKeys = prefs.getStringList('firstSelectedKeys') ?? [];
+      for (final entry in firstStoredKeys) {
         final split = entry.split(':');
         if (split.length == 2) {
           final idx = int.tryParse(split[0]);
-          if (idx != null) _firstSelectedValues[idx] = split[1];
+          if (idx != null) _firstSelectedKeys[idx] = split[1];
         }
       }
 
-      final secondStoredValue = prefs.getStringList('secondSelectedValues') ?? [];
-      for (final entry in secondStoredValue) {
+      final secondStoredKeys = prefs.getStringList('secondSelectedKeys') ?? [];
+      for (final entry in secondStoredKeys) {
         final split = entry.split(':');
         if (split.length == 2) {
           final idx = int.tryParse(split[0]);
-          if (idx != null) _secondSelectedValues[idx] = split[1];
+          if (idx != null) _secondSelectedKeys[idx] = split[1];
         }
       }
 
-      for (int i = 0; i < 5; i++) {
-        _firstSelectedValues.putIfAbsent(i, () => null);
-        _secondSelectedValues.putIfAbsent(i, () => null);
+      for (int i = 0; i < optionKeys.length; i++) {
+        _firstSelectedKeys.putIfAbsent(i, () => null);
+        _secondSelectedKeys.putIfAbsent(i, () => null);
       }
 
       notifyListeners();
@@ -52,17 +53,17 @@ class SelectionProvider extends ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      final List<String> firstStoredMap = _firstSelectedValues.entries
+      final List<String> firstStoredMap = _firstSelectedKeys.entries
           .where((e) => e.value != null)
           .map((e) => '${e.key}:${e.value}')
           .toList();
-      await prefs.setStringList('firstSelectedValues', firstStoredMap);
+      await prefs.setStringList('firstSelectedKeys', firstStoredMap);
 
-      final List<String> secondStoredMap = _secondSelectedValues.entries
+      final List<String> secondStoredMap = _secondSelectedKeys.entries
           .where((e) => e.value != null)
           .map((e) => '${e.key}:${e.value}')
           .toList();
-      await prefs.setStringList('secondSelectedValues', secondStoredMap);
+      await prefs.setStringList('secondSelectedKeys', secondStoredMap);
 
       await prefs.setInt('selectedIndex', _selectedIndex);
     } catch (e) {
@@ -76,31 +77,31 @@ class SelectionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> selectFirstValue(String value) async {
-    _firstSelectedValues[_selectedIndex] = value;
+  Future<void> selectFirstValue(String key) async {
+    _firstSelectedKeys[_selectedIndex] = key;
     await _saveSelection();
     notifyListeners();
   }
 
-  Future<void> selectSecondValue(String value) async {
-    _secondSelectedValues[_selectedIndex] = value;
+  Future<void> selectSecondValue(String key) async {
+    _secondSelectedKeys[_selectedIndex] = key;
     await _saveSelection();
     notifyListeners();
   }
 
   Future<void> resetCurrentCategory() async {
-    _firstSelectedValues[_selectedIndex] = null;
-    _secondSelectedValues[_selectedIndex] = null;
+    _firstSelectedKeys[_selectedIndex] = null;
+    _secondSelectedKeys[_selectedIndex] = null;
     await _saveSelection();
     notifyListeners();
   }
 
   Future<void> resetAllCategories() async {
-    _firstSelectedValues.clear();
-    _secondSelectedValues.clear();
-    for (int i = 0; i < 5; i++) {
-      _firstSelectedValues[i] = null;
-      _secondSelectedValues[i] = null;
+    _firstSelectedKeys.clear();
+    _secondSelectedKeys.clear();
+    for (int i = 0; i < optionKeys.length; i++) {
+      _firstSelectedKeys[i] = null;
+      _secondSelectedKeys[i] = null;
     }
     _selectedIndex = 0;
     await _saveSelection();
