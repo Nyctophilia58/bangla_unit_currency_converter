@@ -159,10 +159,6 @@ class _ConverterPageState extends State<ConverterPage> {
         ? optionLabelsEnglish[dropdownProvider.selectedIndex]!
         : optionLabelsBangla[dropdownProvider.selectedIndex]!;
 
-    final bottomInset = MediaQuery.of(context).padding.bottom;
-    final isGestureNav = bottomInset > 0;
-
-
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
@@ -418,10 +414,10 @@ class _ConverterPageState extends State<ConverterPage> {
                     ),
                   ),
 
-                  if (!_iapService.isPro)
-                    SizedBox(height: isGestureNav ? padding * 5 : padding * 4)
+                  if (_iapService.isPro)
+                    SizedBox(height: padding * 7)
                   else
-                    SizedBox(height: isGestureNav ? padding * 8 : padding * 7),
+                    SizedBox(height: padding * 5),
 
                   GridView.builder(
                     shrinkWrap: true,
@@ -439,6 +435,7 @@ class _ConverterPageState extends State<ConverterPage> {
                       return AnimatedScaleButton(value: value, onTap: _onButtonTap);
                     },
                   ),
+
                   AnimatedSize(
                     duration: const Duration(milliseconds: 300),
                     curve: Curves.easeInOut,
@@ -456,7 +453,6 @@ class _ConverterPageState extends State<ConverterPage> {
                       },
                     ),
                   )
-
                 ],
               ),
             );

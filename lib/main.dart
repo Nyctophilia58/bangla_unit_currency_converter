@@ -6,9 +6,12 @@ import 'package:unit_currency_converter/providers/theme_provider.dart';
 import 'package:unit_currency_converter/services/iap_service.dart';
 import 'screens/converter.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/services.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
   const isTest = bool.fromEnvironment('FLUTTER_TEST');
   if (!isTest) {
