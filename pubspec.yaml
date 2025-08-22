@@ -30,6 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  lottie: ^3.3.1
   flutter_localizations:
     sdk: flutter
 
@@ -95,6 +96,7 @@ flutter:
   assets:
      - assets/icons/
      - assets/app_logo/
+     - assets/animations/
 
   generate: true
   # An image asset can refer to one or more resolution-specific "variants", see
