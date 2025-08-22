@@ -7,6 +7,7 @@ import 'package:unit_currency_converter/services/iap_service.dart';
 import 'screens/converter.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
+import 'package:lottie/lottie.dart';
 
 
 void main() async {
@@ -43,7 +44,22 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Bangla Unit Currency Converter',
       theme: Provider.of<ThemeProvider>(context).themeData,
-      home: const ConverterPage(),
+      home: Scaffold(
+        body: FutureBuilder(
+          future: Future.delayed(const Duration(seconds: 3)),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              return const ConverterPage();
+            } else {
+              return Center(
+                child: Lottie.asset(
+                  'assets/animations/Calculator.json', // Animation can be controlled. check plugin doc.
+                ),
+              );
+            }
+          },
+        ),
+      ),
     );
   }
 }
