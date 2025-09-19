@@ -12,3 +12,8 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+
+
+# my important files such as api_key.dart
+lib/api_key.dart
+assets/secrets.txt
