@@ -44,9 +44,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
-/lib/constant/api_key.dart
+
+lib/constant/api_key.dart
 <<<<<<< HEAD
 assets/secrets.txt
 =======
 >>>>>>> origin/main
-assets/secrets.txt
