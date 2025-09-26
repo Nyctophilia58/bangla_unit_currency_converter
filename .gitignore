@@ -45,3 +45,4 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 /lib/constant/api_key.dart
+assets/secrets.txt
