@@ -51,7 +51,7 @@ Before installing and running the app, make sure you have:
 - ✅ [Flutter SDK](https://docs.flutter.dev/get-started/install) (latest stable version recommended)  
 - ✅ [Dart](https://dart.dev/get-dart) (comes bundled with Flutter)  
 - ✅ Android Studio or VS Code with Flutter & Dart plugins installed  
-- ✅ A device/emulator (Android or iOS)  
+- ✅ A device/emulator (Android)  
 - ✅ Internet connection *(required for real-time currency conversion)*  
 - ✅ Git (for cloning the repository)  
 
